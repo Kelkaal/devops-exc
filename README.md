@@ -61,7 +61,7 @@ Pull requests run validation/testing; deployment is restricted to pushes to `mai
 .
 ├── .github/workflows/
 │   ├── deploy.yml        # Build, test and deploy
-│   └── destroy.yml       # Manually triggered infrastructure teardown
+│   └── destroy.yml      
 ├── app/                  # Node.js application and tests
 ├── terraform/
 │   ├── modules/
@@ -114,9 +114,6 @@ After a successful run, use the URL shown in the workflow output and visit `/hea
 | AWS SSM | Run deployment commands without relying on SSH for CI/CD |
 | HCP Terraform state | Centralized state across workflow runs |
 
-## ⚠️ Assumptions & limitations
-
-This is a **technical demonstration**, not a production-hardened platform. It assumes valid AWS/HCP access and a publicly reachable application on port `3000`. It uses a single EC2 instance, HTTP rather than HTTPS, and an overly broad SSH ingress rule. Production improvements include HTTPS behind a load balancer, restricted network access, GitHub OIDC instead of long-lived AWS keys, stronger deployment approvals/rollback, and verified log ingestion. A full destroy-and-recreate cycle has not been confirmed.
 
 ---
 
