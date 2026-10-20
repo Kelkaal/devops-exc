@@ -101,7 +101,7 @@ After a successful run, use the URL shown in the workflow output and visit `/hea
 ## 📊 Monitoring & verification
 
 - **CloudWatch alarms:** High EC2 CPU usage and failed EC2 status checks.
-- **Application logs:** CloudWatch log group and Docker `awslogs` configuration are included; successful log ingestion has **not yet been independently verified**.
+- **Application logs:** CloudWatch log group and Docker `awslogs` configuration are included; successful log ingestion has **been independently verified**.
 - **Deployment evidence:** GitHub Actions deployment succeeded; SSM returned success, Terraform reused the existing EC2 instance, and the `/health` endpoint responded successfully.
 
 ## 🧠 Design decisions
