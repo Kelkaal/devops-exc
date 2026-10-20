@@ -97,6 +97,19 @@ jobs:
         working-directory: ./terraform/environments/prod
         run: terraform init
 
+      
+      # - name: Terraform Plan
+      #   working-directory: ./terraform/environments/prod
+      #   run: |
+      #     terraform plan \
+      #       -var="docker_image=ghcr.io/${{ github.repository }}:latest" \
+      #       -var="ssh_public_key=${{ secrets.EC2_SSH_PUBLIC_KEY }}" \
+      #       -out=tfplan
+
+      # - name: Terraform Apply
+      #   working-directory: ./terraform/environments/prod
+      #   run: terraform apply -auto-approve tfplan
+
       - name: Terraform Destroy
         working-directory: ./terraform/environments/prod
         run: |
@@ -104,10 +117,6 @@ jobs:
             -var="docker_image=ghcr.io/${{ github.repository }}:latest" \
             -var="ssh_public_key=${{ secrets.EC2_SSH_PUBLIC_KEY }}" \
             -out=tfplan
-
-      - name: Terraform Destroy
-        working-directory: ./terraform/environments/prod
-        run: terraform destroy -auto-approve tfplan
 
       - name: Get app URL
         working-directory: ./terraform/environments/prod
