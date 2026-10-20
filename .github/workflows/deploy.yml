@@ -97,10 +97,10 @@ jobs:
         working-directory: ./terraform/environments/prod
         run: terraform init
 
-      - name: Terraform Plan
+      - name: Terraform Destroy
         working-directory: ./terraform/environments/prod
         run: |
-          terraform plan \
+          terraform destroy \
             -var="docker_image=ghcr.io/${{ github.repository }}:latest" \
             -var="ssh_public_key=${{ secrets.EC2_SSH_PUBLIC_KEY }}" \
             -out=tfplan
