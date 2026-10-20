@@ -1,3 +1,4 @@
+
 name: Build, Test and Deploy
 
 on:
@@ -9,12 +10,18 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
+  TF_IN_AUTOMATION: "true"
+
+concurrency:
+  group: devops-pipeline-production
+  cancel-in-progress: false
 
 jobs:
-
   build-and-test:
     name: Build & Test
     runs-on: ubuntu-latest
+
     permissions:
       contents: read
       packages: write
@@ -37,11 +44,12 @@ jobs:
       - name: Run smoke test
         working-directory: ./app
         run: |
+          set -e
           node index.js &
           APP_PID=$!
+          trap 'kill "$APP_PID" 2>/dev/null || true' EXIT
           sleep 2
           npm test
-          kill $APP_PID
 
       - name: Log in to GitHub Container Registry
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -74,8 +82,12 @@ jobs:
     name: Deploy to AWS
     needs: build-and-test
     runs-on: ubuntu-latest
+
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment: production
+
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout code
@@ -84,7 +96,7 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: '1.7.0'
+          terraform_version: '1.16.6'
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -95,47 +107,41 @@ jobs:
 
       - name: Terraform Init
         working-directory: ./terraform/environments/prod
-        run: terraform init
+        run: terraform init -input=false
 
-      
-      # - name: Terraform Plan
-      #   working-directory: ./terraform/environments/prod
-      #   run: |
-      #     terraform plan \
-      #       -var="docker_image=ghcr.io/${{ github.repository }}:latest" \
-      #       -var="ssh_public_key=${{ secrets.EC2_SSH_PUBLIC_KEY }}" \
-      #       -out=tfplan
+      - name: Terraform Validate
+        working-directory: ./terraform/environments/prod
+        run: terraform validate
 
-      # - name: Terraform Apply
-      #   working-directory: ./terraform/environments/prod
-      #   run: terraform apply -auto-approve tfplan
-
-     
-      - name: Terraform Destroy
+      - name: Terraform Plan
         working-directory: ./terraform/environments/prod
         run: |
-          terraform destroy \
+          terraform plan \
+            -input=false \
             -var="docker_image=ghcr.io/${{ github.repository }}:latest" \
             -var="ssh_public_key=${{ secrets.EC2_SSH_PUBLIC_KEY }}" \
-            -auto-approve
+            -out=tfplan
 
+      - name: Terraform Apply
+        working-directory: ./terraform/environments/prod
+        run: terraform apply -input=false -auto-approve tfplan
 
       - name: Get app URL
         working-directory: ./terraform/environments/prod
         run: |
           APP_URL=$(terraform output -raw app_url)
-          echo "APP_URL=$APP_URL" >> $GITHUB_ENV
+          echo "APP_URL=$APP_URL" >> "$GITHUB_ENV"
 
       - name: Wait for app to be healthy
         run: |
           echo "Waiting for app..."
           for i in {1..20}; do
-          if curl -sf "${APP_URL}/health"; then
-            echo "App is healthy!"
-            exit 0
-          fi
-          echo "Attempt $i/20 - retrying in 15s..."
-          sleep 15
+            if curl -sf "${APP_URL}/health"; then
+              echo "App is healthy!"
+              exit 0
+            fi
+            echo "Attempt $i/20 - retrying in 15s..."
+            sleep 15
           done
           echo "App did not become healthy in time"
           exit 1
