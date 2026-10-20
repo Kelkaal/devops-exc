@@ -199,7 +199,7 @@ jobs:
               "cloud-init status --wait",
               "docker pull " + $image,
               "docker rm -f app || true",
-              "docker run -d --name app --restart always -p 3000:3000 -e NODE_ENV=production " + $image
+              "docker run -d --name app --restart always -p 3000:3000 -e NODE_ENV=production --log-driver awslogs --log-opt awslogs-region=us-east-1 --log-opt awslogs-group=/devops-challenge/prod/app --log-opt awslogs-stream=app " + $image
             ]
           }' > ssm-parameters.json
 

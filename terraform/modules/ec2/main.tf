@@ -103,11 +103,15 @@ resource "aws_instance" "app" {
     systemctl start amazon-ssm-agent
 
     docker pull ${var.docker_image}
-    docker run -d \
+       docker run -d \
       --name app \
       --restart always \
       -p ${var.app_port}:${var.app_port} \
       -e NODE_ENV=production \
+      --log-driver awslogs \
+      --log-opt awslogs-region=us-east-1 \
+      --log-opt awslogs-group=/devops-challenge/prod/app \
+      --log-opt awslogs-stream=app \
       ${var.docker_image}
   EOF
 
