@@ -1,0 +1,8 @@
+aws_region        = "us-east-1"
+project_name      = "devops-challenge"
+environment       = "prod"
+app_port          = 3000
+ec2_instance_type = "t3.micro"
+
+ssh_public_key = "ssh-rsa AAAA..."
+docker_image   = "ghcr.io/YOUR_GITHUB_USERNAME/devops-challenge:latest"

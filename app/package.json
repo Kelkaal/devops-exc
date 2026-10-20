@@ -1,0 +1,13 @@
+{
+  "name": "devops-challenge-app",
+  "version": "1.0.0",
+  "description": "Simple Node.js app for DevOps challenge",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node -e \"const http = require('http'); const req = http.request({host:'localhost',port:3000,path:'/health'}, res => { process.exit(res.statusCode === 200 ? 0 : 1); }); req.on('error', () => process.exit(1)); req.end();\""
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
