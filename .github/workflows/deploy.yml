@@ -110,13 +110,15 @@ jobs:
       #   working-directory: ./terraform/environments/prod
       #   run: terraform apply -auto-approve tfplan
 
+     
       - name: Terraform Destroy
         working-directory: ./terraform/environments/prod
         run: |
           terraform destroy \
             -var="docker_image=ghcr.io/${{ github.repository }}:latest" \
             -var="ssh_public_key=${{ secrets.EC2_SSH_PUBLIC_KEY }}" \
-            -out=tfplan
+            -auto-approve
+
 
       - name: Get app URL
         working-directory: ./terraform/environments/prod
