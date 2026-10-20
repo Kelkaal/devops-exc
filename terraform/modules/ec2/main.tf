@@ -50,6 +50,10 @@ resource "aws_iam_role_policy_attachment" "cloudwatch" {
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
 }
 
+resource "aws_iam_role_policy_attachment" "ssm" {
+  role       = aws_iam_role.ec2.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
 resource "aws_iam_instance_profile" "ec2" {
   name = "${var.project_name}-${var.environment}-ec2-profile"
   role = aws_iam_role.ec2.name
@@ -67,7 +71,11 @@ resource "aws_instance" "app" {
   vpc_security_group_ids = [aws_security_group.app.id]
   iam_instance_profile   = aws_iam_instance_profile.ec2.name
   key_name               = aws_key_pair.deployer.key_name
+  depends_on = [
+  aws_iam_role_policy_attachment.ssm
+  ]
 
+  
   root_block_device {
     volume_size           = 20
     volume_type           = "gp3"
@@ -75,13 +83,24 @@ resource "aws_instance" "app" {
     encrypted             = true
   }
 
+
   user_data = <<-EOF
     #!/bin/bash
     set -e
+
     yum update -y
     yum install -y docker amazon-cloudwatch-agent
+
     systemctl enable docker
     systemctl start docker
+
+    # Install SSM Agent if it is not already installed
+    if ! rpm -q amazon-ssm-agent >/dev/null 2>&1; then
+      yum install -y https://s3.us-east-1.amazonaws.com/amazon-ssm-us-east-1/latest/linux_amd64/amazon-ssm-agent.rpm
+    fi
+
+    systemctl enable amazon-ssm-agent
+    systemctl start amazon-ssm-agent
 
     docker pull ${var.docker_image}
     docker run -d \
