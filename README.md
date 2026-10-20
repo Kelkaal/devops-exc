@@ -61,7 +61,7 @@ Pull requests run validation/testing; deployment is restricted to pushes to `mai
 .
 ├── .github/workflows/
 │   ├── deploy.yml        # Build, test and deploy
-│   └── destroy.yml      
+│   └── destroy.yml       # Manually triggered infrastructure teardown
 ├── app/                  # Node.js application and tests
 ├── terraform/
 │   ├── modules/
