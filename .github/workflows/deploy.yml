@@ -105,9 +105,9 @@ jobs:
             -var="ssh_public_key=${{ secrets.EC2_SSH_PUBLIC_KEY }}" \
             -out=tfplan
 
-      - name: Terraform Apply
+      - name: Terraform Destroy
         working-directory: ./terraform/environments/prod
-        run: terraform apply -auto-approve tfplan
+        run: terraform destroy -auto-approve tfplan
 
       - name: Get app URL
         working-directory: ./terraform/environments/prod
