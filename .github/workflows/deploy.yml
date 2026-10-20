@@ -112,75 +112,75 @@ jobs:
         run: terraform init -input=false
 
       
-      # - name: Terraform Destroy Plan
-      #   working-directory: ./terraform/environments/prod
-      #   env:
-      #     TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
-      #   run: |
-      #     terraform plan -destroy \
-      #       -input=false \
-      #       -var="docker_image=ghcr.io/${{ env.IMAGE_NAME }}:latest" \
-      #       -var="ssh_public_key=${{ secrets.EC2_SSH_PUBLIC_KEY }}" \
-      #       -out=tfplan
-
-      # - name: Terraform Destroy
-      #   working-directory: ./terraform/environments/prod
-      #   env:
-      #     TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
-      #   run: terraform apply -auto-approve tfplan
-
-      # - name: Verify Terraform State
-      #   working-directory: ./terraform/environments/prod
-      #   env:
-      #     TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
-      #   run: |
-      #     echo "Remaining Terraform resources:"
-      #     terraform state list
-
-      - name: Terraform Validate
+      - name: Terraform Destroy Plan
         working-directory: ./terraform/environments/prod
-        run: terraform validate
-
-  
-      - name: Terraform Plan
-        working-directory: ./terraform/environments/prod
+        env:
+          TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
         run: |
-          terraform plan \
+          terraform plan -destroy \
             -input=false \
             -var="docker_image=ghcr.io/${{ env.IMAGE_NAME }}:latest" \
             -var="ssh_public_key=${{ secrets.EC2_SSH_PUBLIC_KEY }}" \
             -out=tfplan
 
-
-      - name: Terraform Apply
+      - name: Terraform Destroy
         working-directory: ./terraform/environments/prod
-        run: terraform apply -input=false -auto-approve tfplan
+        env:
+          TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
+        run: terraform apply -auto-approve tfplan
 
-      - name: Get app URL
+      - name: Verify Terraform State
         working-directory: ./terraform/environments/prod
+        env:
+          TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
         run: |
-          APP_URL=$(terraform output -raw app_url)
-          echo "APP_URL=$APP_URL" >> "$GITHUB_ENV"
+          echo "Remaining Terraform resources:"
+          terraform state list
 
-      - name: Wait for app to be healthy
-        run: |
-          echo "Waiting for app..."
-          for i in {1..20}; do
-            if curl -sf "${APP_URL}/health"; then
-              echo "App is healthy!"
-              exit 0
-            fi
-            echo "Attempt $i/20 - retrying in 15s..."
-            sleep 15
-          done
-          echo "App did not become healthy in time"
-          exit 1
+      # - name: Terraform Validate
+      #   working-directory: ./terraform/environments/prod
+      #   run: terraform validate
 
-      - name: Deployment summary
-        run: |
-          echo "=================================="
-          echo "  Deployed successfully!"
-          echo "  URL:    ${{ env.APP_URL }}"
-          echo "  Image:  ghcr.io/${{ env.IMAGE_NAME }}:latest"
-          echo "  Commit: ${{ github.sha }}"
-          echo "=================================="
+  
+      # - name: Terraform Plan
+      #   working-directory: ./terraform/environments/prod
+      #   run: |
+      #     terraform plan \
+      #       -input=false \
+      #       -var="docker_image=ghcr.io/${{ env.IMAGE_NAME }}:latest" \
+      #       -var="ssh_public_key=${{ secrets.EC2_SSH_PUBLIC_KEY }}" \
+      #       -out=tfplan
+
+
+      # - name: Terraform Apply
+      #   working-directory: ./terraform/environments/prod
+      #   run: terraform apply -input=false -auto-approve tfplan
+
+      # - name: Get app URL
+      #   working-directory: ./terraform/environments/prod
+      #   run: |
+      #     APP_URL=$(terraform output -raw app_url)
+      #     echo "APP_URL=$APP_URL" >> "$GITHUB_ENV"
+
+      # - name: Wait for app to be healthy
+      #   run: |
+      #     echo "Waiting for app..."
+      #     for i in {1..20}; do
+      #       if curl -sf "${APP_URL}/health"; then
+      #         echo "App is healthy!"
+      #         exit 0
+      #       fi
+      #       echo "Attempt $i/20 - retrying in 15s..."
+      #       sleep 15
+      #     done
+      #     echo "App did not become healthy in time"
+      #     exit 1
+
+      # - name: Deployment summary
+      #   run: |
+      #     echo "=================================="
+      #     echo "  Deployed successfully!"
+      #     echo "  URL:    ${{ env.APP_URL }}"
+      #     echo "  Image:  ghcr.io/${{ env.IMAGE_NAME }}:latest"
+      #     echo "  Commit: ${{ github.sha }}"
+      #     echo "=================================="
